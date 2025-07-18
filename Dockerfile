@@ -12,17 +12,16 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files and set ownership directly
-COPY --chown=node:node package*.json yarn.lock ./
+COPY --chown=node:node package*.json ./
 
 # Install dependencies (as root here)
-RUN yarn install && npm install -g pm2
+RUN npm install && npm install -g pm2
 
 # Copy app code and set ownership directly
 COPY --chown=node:node . .
 
-
 # Build app (still as root for native builds)
-RUN yarn build && ls -al dist/
+RUN npm run build && ls -al dist/
 
 # Switch to non-root user (no need for chown -R anymore)
 USER node
