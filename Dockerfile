@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 COPY --chown=node:node package*.json ./
 
 # Install dependencies (as root here)
-RUN npm install && npm install -g pm2
+RUN npm install --force && npm install -g pm2
 
 # Copy app code and set ownership directly
 COPY --chown=node:node . .
