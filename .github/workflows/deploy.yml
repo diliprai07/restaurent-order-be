@@ -1,0 +1,44 @@
+name: Restaurant App
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Executing remote SSH commands
+        uses: appleboy/ssh-action@master
+        timeout-minutes: 120
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.PASS }}
+          port: ${{ secrets.PORT }}
+          timeout: 120m
+          command_timeout: 120m
+          script: |
+            set -e  # Exit immediately if a command fails
+
+            # Navigate to the project directory
+            cd ~/jobsboard-be
+
+            # Ensure correct branch and pull latest changes
+            git checkout develop
+            git pull origin develop
+
+            # Stop and remove existing container if running
+            docker ps -q -f name=restaurant-be_app | grep -q . && docker stop restaurant-be_app && docker rm restaurant-be_app || echo "No running container found."
+
+            # Remove unused Docker resources
+            docker system prune -af --volumes
+
+            # Rebuild and start the container with the correct service name
+            docker compose build --no-cache
+            docker compose up -d --force-recreate --remove-orphans
