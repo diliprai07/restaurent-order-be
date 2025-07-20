@@ -1,4 +1,4 @@
-name: Restaurant App
+name: Restaurant App Deploy
 
 on:
   push:
@@ -9,36 +9,48 @@ jobs:
   deployment:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Executing remote SSH commands
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         timeout-minutes: 120
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
-          key: ${{ secrets.PASS }}
+          key: ${{ secrets.AWS_SSH_KEY }}
           port: ${{ secrets.PORT }}
-          timeout: 120m
-          command_timeout: 120m
+          envs: DB_USER,DB_PASSWORD,DB_NAME
           script: |
-            set -e  # Exit immediately if a command fails
+            set -e
 
-            # Navigate to the project directory
-            cd ~/jobsboard-be
+            cd ~/restaurant-order-be
 
-            # Ensure correct branch and pull latest changes
-            git checkout develop
-            git pull origin develop
+            echo "Pulling latest code from develop"
+            git fetch origin develop && git checkout develop && git pull
 
-            # Stop and remove existing container if running
-            docker ps -q -f name=restaurant-be_app | grep -q . && docker stop restaurant-be_app && docker rm restaurant-be_app || echo "No running container found."
+            echo "Stopping existing containers if running"
+            docker compose down
 
-            # Remove unused Docker resources
+            echo "Removing old images and volumes"
             docker system prune -af --volumes
 
-            # Rebuild and start the container with the correct service name
-            docker compose build --no-cache
-            docker compose up -d --force-recreate --remove-orphans
+            echo "Creating .env file"
+            cat <<EOF > .env
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            DB_PORT=${{ secrets.DB_PORT }}
+            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+            JWT_EXPIRATION_TIME=${{ secrets.JWT_EXPIRATION_TIME }}
+            REFRESH_SECRET_KEY=${{ secrets.REFRESH_SECRET_KEY }}
+            REFRESH_EXPIRATION_TIME=${{ secrets.REFRESH_EXPIRATION_TIME }}
+            EOF
+
+            echo "Building and starting containers"
+            docker compose --env-file .env up -d --build --force-recreate --remove-orphans
+
+            echo "Deployed successfully. Running containers:"

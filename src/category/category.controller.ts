@@ -28,7 +28,7 @@ export class CategoryController {
   create(@Body() createCategoryDto: CreateCategoryDto) {
     return this.categoryService.create(createCategoryDto);
   }
-
+  // change
   @Get()
   @TransformDTO(ResponseCategoryDto)
   findAll() {

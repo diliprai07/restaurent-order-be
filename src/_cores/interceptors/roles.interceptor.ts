@@ -25,14 +25,14 @@ export class RoleInterceptor implements NestInterceptor {
     } = request;
     if (!currentUser) return next.handle();
     console.log(`Checking permissions for user: ${currentUser.username}, path: ${path}, method: ${method}`);
-    const endpoint = await this.endpointService.findOne(path, method);
-    const permission = await this.permissionService.findOne(
-      currentUser.roleName,
-      endpoint.id,
-    );
+    // const endpoint = await this.endpointService.findOne(path, method);
+    // const permission = await this.permissionService.findOne(
+    //   currentUser.roleName,
+    //   endpoint.id,
+    // );
 
-    if (!permission.isAllow)
-      throw new ForbiddenException('You cannot perform this action');
+    // if (!permission.isAllow)
+    //   throw new ForbiddenException('You cannot perform this action');
 
     return next.handle();
   }
