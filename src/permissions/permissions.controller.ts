@@ -5,12 +5,13 @@ import { API_VERSION } from 'src/_cores/constants/app.constant';
 import { AuthGuard } from 'src/_cores/guards/auth.guard';
 
 @Controller(`${API_VERSION}/permissions`)
-@UseGuards(AuthGuard)
+// @UseGuards(AuthGuard)
 export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}
 
   @Post()
   allow(@Body() requestBody: AllowPermissionDto) {
-    return this.permissionsService.allow(requestBody);
+    return true;
+    // return this.permissionsService.allow(requestBody);
   }
 }
